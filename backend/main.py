@@ -116,7 +116,10 @@ def ingest(payload: IngestRequest, db: Session = Depends(get_db)) -> AlertOut:
     # Calculate login recency
     logins = [e.timestamp for e in recent_events if e.type == "login"]
     if logins:
-        days_since_login = (datetime.utcnow() - max(logins)).days
+        latest_login = max(logins)
+        if latest_login.tzinfo is not None:
+            latest_login = latest_login.replace(tzinfo=None)
+        days_since_login = (datetime.utcnow() - latest_login).days
     else:
         days_since_login = 30 # default if no logins
 
