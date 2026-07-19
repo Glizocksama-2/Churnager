@@ -5,7 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import Base, engine, get_db
 from models import Alert, Customer, Event
@@ -152,6 +152,7 @@ def ingest(payload: IngestRequest, db: Session = Depends(get_db)) -> AlertOut:
 def get_risk(id: int, db: Session = Depends(get_db)) -> AlertOut:
     alert = (
         db.query(Alert)
+        .options(joinedload(Alert.customer))
         .filter(Alert.customer_id == id)
         .order_by(desc(Alert.created_at))
         .first()
@@ -182,7 +183,7 @@ def get_alerts(db: Session = Depends(get_db), include_handled: bool = False) -> 
         .group_by(Alert.customer_id)
         .subquery()
     )
-    query = db.query(Alert).filter(Alert.id.in_(latest_ids)).order_by(desc(Alert.created_at))
+    query = db.query(Alert).options(joinedload(Alert.customer)).filter(Alert.id.in_(latest_ids)).order_by(desc(Alert.created_at))
     if not include_handled:
         query = query.filter(Alert.handled_at.is_(None))
     return [alert_to_dict(alert) for alert in query.all()]
