@@ -1,0 +1,22 @@
+rules:
+  login_recency:
+    weight: 30
+    threshold_days: 14
+  payment_failures:
+    weight: 25
+    threshold_failed: 2
+  usage_drop:
+    weight: 20
+    threshold_pct: 50
+  plan_downgrade:
+    weight: 15
+    boolean: true
+  support_spike:
+    weight: 10
+    threshold_tickets: 3
+
+tiers:
+  critical: 70
+  high: 50
+  medium: 30
+  low: 0

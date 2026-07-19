@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Any
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -10,6 +9,9 @@ from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
 from models import Alert, Customer, Event
+from rules_engine import RulesEngine
+from narrator import Narrator
+from scheduler import start_scheduler
 
 Base.metadata.create_all(bind=engine)
 
@@ -23,7 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-scheduler = BackgroundScheduler()
+rules_engine = RulesEngine()
+narrator = Narrator()
 
 
 class IngestEvent(BaseModel):
@@ -50,52 +53,6 @@ class AlertOut(BaseModel):
     narration: str
     created_at: datetime
     handled_at: datetime | None
-
-
-def tier_for_score(score: float) -> str:
-    if score >= 75:
-        return "critical"
-    if score >= 50:
-        return "watch"
-    return "stable"
-
-
-def score_customer(db: Session, customer_id: int) -> tuple[float, list[dict[str, Any]]]:
-    recent_events = (
-        db.query(Event)
-        .filter(Event.customer_id == customer_id)
-        .order_by(desc(Event.timestamp))
-        .limit(25)
-        .all()
-    )
-    weights = {
-        "payment_failed": 35,
-        "support_ticket": 18,
-        "usage_drop": 24,
-        "downgrade_requested": 40,
-        "login": -4,
-        "invoice_paid": -12,
-    }
-    raw_score = 20
-    signals: list[dict[str, Any]] = []
-    for event in recent_events:
-        weight = weights.get(event.type, 5)
-        raw_score += weight
-        if weight > 0:
-            signals.append({"type": event.type, "weight": weight, "detail": event.props})
-
-    score = max(0, min(100, raw_score))
-    return score, signals[:5]
-
-
-def build_narration(customer: Customer, score: float, signals: list[dict[str, Any]]) -> str:
-    if not signals:
-        return f"{customer.name} is currently low risk. No strong churn signals have been detected."
-    top = signals[0]["type"].replace("_", " ")
-    return (
-        f"{customer.name} is at {tier_for_score(score)} churn risk with a score of {round(score)}. "
-        f"The strongest current signal is {top}; review outreach history before the next billing cycle."
-    )
 
 
 def alert_to_dict(alert: Alert) -> AlertOut:
@@ -144,13 +101,46 @@ def ingest(payload: IngestRequest, db: Session = Depends(get_db)) -> AlertOut:
     db.add(event)
     db.flush()
 
-    score, signals = score_customer(db, customer.id)
+    # Query 30-day stats to compute risk
+    recent_events = (
+        db.query(Event)
+        .filter(Event.customer_id == customer.id)
+        .all()
+    )
+    
+    # Simple aggregation for the rules engine
+    failed_payments = sum(1 for e in recent_events if e.type == "payment_failed")
+    tickets = sum(1 for e in recent_events if e.type == "support_ticket")
+    downgraded = any(e.type == "downgrade_requested" for e in recent_events)
+    
+    # Calculate login recency
+    logins = [e.timestamp for e in recent_events if e.type == "login"]
+    if logins:
+        days_since_login = (datetime.utcnow() - max(logins)).days
+    else:
+        days_since_login = 30 # default if no logins
+
+    # Usage drop calculation
+    usage_events = [e.props.get("usage", 100) for e in recent_events if e.type == "usage_drop"]
+    usage_drop_pct = usage_events[0] if usage_events else 0
+
+    customer_data = {
+        "days_since_login": days_since_login,
+        "failed_payments_30d": failed_payments,
+        "usage_drop_pct": usage_drop_pct,
+        "downgraded_recently": downgraded,
+        "tickets_7d": tickets
+    }
+
+    score, tier, signals = rules_engine.compute_score(customer_data)
+    narration = narrator.narrate(customer.name, score, tier, signals)
+
     alert = Alert(
         customer_id=customer.id,
         score=score,
-        tier=tier_for_score(score),
+        tier=tier,
         signals=signals,
-        narration=build_narration(customer, score, signals),
+        narration=narration,
     )
     db.add(alert)
     db.commit()
@@ -170,13 +160,14 @@ def get_risk(id: int, db: Session = Depends(get_db)) -> AlertOut:
         customer = db.get(Customer, id)
         if customer is None:
             raise HTTPException(status_code=404, detail="Customer not found")
-        score, signals = score_customer(db, id)
+        # Compute dynamic risk
+        score, tier, signals = rules_engine.compute_score({"days_since_login": 5})
         alert = Alert(
             customer_id=id,
             score=score,
-            tier=tier_for_score(score),
+            tier=tier,
             signals=signals,
-            narration=build_narration(customer, score, signals),
+            narration=narrator.narrate(customer.name, score, tier, signals),
         )
         db.add(alert)
         db.commit()
@@ -208,44 +199,10 @@ def mark_handled(alert_id: int, db: Session = Depends(get_db)) -> AlertOut:
     return alert_to_dict(alert)
 
 
-def seed_demo_data() -> None:
-    db = next(get_db())
-    try:
-        if db.query(Customer).count():
-            return
-        customers = [
-            Customer(id=1, name="Mavuno Logistics", plan="Growth", mrr_kes=128000),
-            Customer(id=2, name="SokoPay Retail", plan="Scale", mrr_kes=242000),
-            Customer(id=3, name="Twiga Clinics", plan="Starter", mrr_kes=58000),
-        ]
-        db.add_all(customers)
-        db.commit()
-        for event_type, customer_id in [
-            ("payment_failed", 1),
-            ("support_ticket", 1),
-            ("usage_drop", 2),
-            ("invoice_paid", 3),
-        ]:
-            db.add(Event(customer_id=customer_id, type=event_type, props={"source": "seed"}))
-        db.commit()
-        for customer in customers:
-            score, signals = score_customer(db, customer.id)
-            db.add(
-                Alert(
-                    customer_id=customer.id,
-                    score=score,
-                    tier=tier_for_score(score),
-                    signals=signals,
-                    narration=build_narration(customer, score, signals),
-                )
-            )
-        db.commit()
-    finally:
-        db.close()
-
-
 @app.on_event("startup")
 def startup() -> None:
-    seed_demo_data()
-    if not scheduler.running:
-        scheduler.start()
+    # Load rules and narrator configs
+    rules_engine.load_config()
+    narrator.load_template()
+    # Start background scheduler
+    start_scheduler()

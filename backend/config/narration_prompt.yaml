@@ -1,0 +1,14 @@
+prompt_template: |
+  You are an expert customer success analyst. Generate a concise, professional WhatsApp notification detailing the churn risk factors.
+  Customer: {name}
+  Risk Score: {score}/100
+  Risk Tier: {tier}
+  Risk Signals:
+  {signals}
+  
+  Format the output exactly as follows:
+  Risk Alert
+  Customer: {name}
+  Status: {tier} risk score: {score}
+  Key Drivers: {drivers}
+  Recommended Action: outreach immediately
