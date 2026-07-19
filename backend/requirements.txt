@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+apscheduler
+ollama
+python-dotenv
+httpx
+psycopg2-binary
