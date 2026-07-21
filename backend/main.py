@@ -213,6 +213,29 @@ def seed_endpoint() -> dict[str, str]:
     return {"status": "seeded"}
 
 
+class STKPushRequest(BaseModel):
+    phone: str
+    amount: int = 1
+    reference: str = "ChurnagerSub"
+
+
+@app.post("/mpesa/stkpush")
+def trigger_mpesa_stk(payload: STKPushRequest) -> dict:
+    from mpesa import DarajaSTKPush
+    client = DarajaSTKPush()
+    return client.trigger_stk_push(
+        phone=payload.phone,
+        amount=payload.amount,
+        reference=payload.reference,
+    )
+
+
+@app.post("/mpesa/callback")
+def mpesa_callback(body: dict[str, Any]) -> dict[str, str]:
+    print(f"M-Pesa Daraja Callback Received: {body}")
+    return {"ResultCode": "0", "ResultDesc": "Accepted"}
+
+
 @app.on_event("startup")
 def startup() -> None:
     # Load rules and narrator configs
