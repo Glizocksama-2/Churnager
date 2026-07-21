@@ -1,8 +1,31 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: churnager-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=churnager
+      - POSTGRES_USER=churnager
+      - POSTGRES_PASSWORD=churnager
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: churnager-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+
   backend:
     build: ./backend
+    container_name: churnager-backend
     ports:
       - "8000:8000"
     volumes:
@@ -10,10 +33,15 @@ services:
       - db_data:/app/db
     environment:
       - DATABASE_URL=sqlite:///./db/angaza_churn_alert.db
+      - OLLAMA_HOST=http://ollama:11434
     restart: always
+    depends_on:
+      - postgres
+      - ollama
 
   frontend:
     build: ./frontend
+    container_name: churnager-frontend
     ports:
       - "3000:3000"
     environment:
@@ -24,3 +52,5 @@ services:
 
 volumes:
   db_data:
+  postgres_data:
+  ollama_data:
