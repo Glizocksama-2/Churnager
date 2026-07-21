@@ -85,7 +85,7 @@ export default function DashboardPage() {
                       <TierBadge tier={alert.tier} />
                     </td>
                     <td className="px-6 py-4 text-xs font-semibold text-slate-500 capitalize">
-                      {alert.signals[0] ? alert.signals[0].type.replace("_", " ") : "None"}
+                      {alert.signals && alert.signals[0] ? (alert.signals[0].name || alert.signals[0].type || "None").replace(/_/g, " ") : "None"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <a

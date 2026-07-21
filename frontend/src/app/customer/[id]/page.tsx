@@ -135,9 +135,9 @@ export default function CustomerDetailPage() {
               {alertData.signals.map((sig: any, idx: number) => (
                 <SignalBar
                   key={idx}
-                  name={sig.type}
-                  weight={sig.weight}
-                  value={sig.weight * 2} // display scaled score
+                  name={sig.name || sig.type || "Signal"}
+                  weight={sig.weight || 10}
+                  value={(sig.weight || 10) * 2} // display scaled score
                 />
               ))}
             </div>
