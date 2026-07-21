@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import { TierBadge } from "../components/TierBadge";
-import { SignalBar } from "../components/SignalBar";
 
 export default function LandingPage() {
   const [phone, setPhone] = useState("");
@@ -17,7 +16,14 @@ export default function LandingPage() {
   }
   const API_URL = rawUrl.replace(/\/$/, "");
 
-  const triggerTestAlert = async () => {
+  const demoCustomers = [
+    { id: 1, name: "Safaricom Agent Portal", plan: "Scale", mrr: "480,000", tier: "critical", score: "100", reason: "3 M-Pesa failures & 20d inactivity" },
+    { id: 2, name: "Kilimall Logistics Hub", plan: "Growth", mrr: "180,000", tier: "critical", score: "85", reason: "60% usage drop & 2 payment drops" },
+    { id: 3, name: "Twiga Distributors Ltd", plan: "Growth", mrr: "150,000", tier: "high", score: "60", reason: "55% usage drop & ticket spike" },
+    { id: 4, name: "Boma Capital Managers", plan: "Pro", mrr: "220,000", tier: "medium", score: "40", reason: "Plan downgrade request & billing drop" },
+  ];
+
+  const triggerTestAlertFor = async (id: number) => {
     setLoading(true);
     setTestResult(null);
     try {
@@ -28,7 +34,7 @@ export default function LandingPage() {
         },
         body: JSON.stringify({
           event: {
-            customer_id: Number(selectedCustomerId),
+            customer_id: Number(id),
             type: "payment_failed",
             props: { amount: 145000, trigger: "interactive_demo" },
           },
@@ -42,6 +48,11 @@ export default function LandingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const runDemoForCustomer = (customerId: number) => {
+    setSelectedCustomerId(customerId);
+    triggerTestAlertFor(customerId);
   };
 
   return (
@@ -84,7 +95,7 @@ export default function LandingPage() {
             <div className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Your WhatsApp Phone Number
+                  Your WhatsApp Phone Number (Optional)
                 </label>
                 <input
                   type="tel"
@@ -97,7 +108,7 @@ export default function LandingPage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Target Customer Cohort
+                  Target Demo Customer Cohort
                 </label>
                 <select
                   value={selectedCustomerId}
@@ -113,7 +124,7 @@ export default function LandingPage() {
               </div>
 
               <button
-                onClick={triggerTestAlert}
+                onClick={() => triggerTestAlertFor(selectedCustomerId)}
                 disabled={loading}
                 className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition shadow-sm disabled:opacity-50"
               >
@@ -157,8 +168,41 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Demo Customer Cohort Cards */}
+      <div className="space-y-6 text-left pt-4">
+        <div>
+          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Interactive Demo Customer Cohorts</h2>
+          <p className="text-xs text-slate-500 mt-1">Click any customer card below to evaluate their risk factors live in the simulator.</p>
+        </div>
+
+        <div className="grid md:grid-cols-4 gap-4">
+          {demoCustomers.map((c) => (
+            <div
+              key={c.id}
+              onClick={() => runDemoForCustomer(c.id)}
+              className="premium-card p-5 bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-500/50 hover:shadow-md cursor-pointer transition space-y-3"
+            >
+              <div className="flex justify-between items-start">
+                <span className="text-xs font-bold text-slate-400 uppercase">{c.plan} Plan</span>
+                <TierBadge tier={c.tier} />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 leading-snug">{c.name}</h3>
+                <span className="text-xs font-mono text-slate-500">KES {c.mrr} / mo</span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span className="text-slate-500 truncate max-w-[140px]">{c.reason}</span>
+                <span className="font-bold text-emerald-600">Simulate &rarr;</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Feature Bento Grid */}
-      <div className="space-y-6 text-left">
+      <div className="space-y-6 text-left pt-4 border-t border-slate-100">
         <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Built for East African SaaS Operations</h2>
         <div className="grid md:grid-cols-3 gap-6">
           <div className="premium-card p-6 bg-white rounded-2xl border border-slate-200/70 space-y-3">
