@@ -15,7 +15,11 @@ export default function CustomerDetailPage() {
   const [handling, setHandling] = useState(false);
   const [phone, setPhone] = useState("");
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+  let rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+  if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+    rawUrl = `https://${rawUrl}`;
+  }
+  const API_URL = rawUrl.replace(/\/$/, "");
 
   const fetchRiskProfile = async () => {
     try {

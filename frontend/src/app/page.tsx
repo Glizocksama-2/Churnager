@@ -11,7 +11,11 @@ export default function LandingPage() {
   const [testResult, setTestResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+  let rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+  if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
+    rawUrl = `https://${rawUrl}`;
+  }
+  const API_URL = rawUrl.replace(/\/$/, "");
 
   const triggerTestAlert = async () => {
     setLoading(true);
