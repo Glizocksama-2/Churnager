@@ -238,9 +238,6 @@ def mpesa_callback(body: dict[str, Any]) -> dict[str, str]:
 
 @app.on_event("startup")
 def startup() -> None:
-    # Load rules and narrator configs
-    rules_engine.load_config()
-    narrator.load_template()
     # Auto-seed database if empty
     from database import SessionLocal
     db = SessionLocal()
@@ -255,3 +252,4 @@ def startup() -> None:
         db.close()
     # Start background scheduler
     start_scheduler()
+
