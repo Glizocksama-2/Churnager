@@ -13,6 +13,7 @@ export default function CustomerDetailPage() {
   const [alertData, setAlertData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [handling, setHandling] = useState(false);
+  const [phone, setPhone] = useState("");
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
 
@@ -90,10 +91,23 @@ export default function CustomerDetailPage() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row md:flex-col gap-3 justify-end h-full">
+        <div className="flex flex-col gap-3 justify-end h-full">
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 text-left">
+              Send Alert to Phone #
+            </label>
+            <input
+              type="tel"
+              placeholder="e.g. +254712345678"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-800 focus:bg-white focus:outline-none transition mb-2"
+            />
+          </div>
           <WhatsAppButton
+            phone={phone}
             message={alertData.narration}
-            label="Send to WhatsApp Owner"
+            label={phone ? `Send Alert to ${phone}` : "Send to WhatsApp Owner"}
             className="w-full text-center"
           />
           <button
