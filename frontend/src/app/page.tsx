@@ -127,13 +127,13 @@ export default function LandingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Target</span>
-                    <span className="text-base font-bold text-slate-900">{testResult.customer_name}</span>
+                    <span className="text-base font-bold text-slate-900">{testResult.customer_name || "Customer Profile"}</span>
                   </div>
                   <div className="text-right">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Risk Score</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-lg font-black text-slate-900">{Math.round(testResult.score)}/100</span>
-                      <TierBadge tier={testResult.tier} />
+                      <span className="text-lg font-black text-slate-900">{Math.round(testResult.score || 0)}/100</span>
+                      <TierBadge tier={testResult.tier || "low"} />
                     </div>
                   </div>
                 </div>

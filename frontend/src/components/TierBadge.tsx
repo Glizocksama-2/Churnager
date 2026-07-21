@@ -1,12 +1,14 @@
 import React from "react";
 
 interface TierBadgeProps {
-  tier: string;
+  tier?: string;
 }
 
-export const TierBadge: React.FC<TierBadgeProps> = ({ tier }) => {
+export const TierBadge: React.FC<TierBadgeProps> = ({ tier = "low" }) => {
+  const safeTier = (tier || "low").toString().toLowerCase();
+
   const getStyles = () => {
-    switch (tier.toLowerCase()) {
+    switch (safeTier) {
       case "critical":
         return {
           bg: "bg-red-50 text-red-700 border-red-200",
@@ -33,7 +35,7 @@ export const TierBadge: React.FC<TierBadgeProps> = ({ tier }) => {
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border ${styles.bg}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`} />
-      <span className="capitalize">{tier}</span>
+      <span className="capitalize">{tier || "low"}</span>
     </span>
   );
 };

@@ -75,14 +75,14 @@ export default function DashboardPage() {
               <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
                 {alerts.map((alert) => (
                   <tr key={alert.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-6 py-4 font-bold text-slate-900">{alert.customer_name}</td>
-                    <td className="px-6 py-4 font-medium">{alert.plan}</td>
+                    <td className="px-6 py-4 font-bold text-slate-900">{alert.customer_name || "Unknown Customer"}</td>
+                    <td className="px-6 py-4 font-medium">{alert.plan || "Standard"}</td>
                     <td className="px-6 py-4 font-mono font-semibold">
-                      {alert.mrr_kes.toLocaleString()}
+                      {(alert.mrr_kes || 0).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 font-bold">{Math.round(alert.score)}</td>
+                    <td className="px-6 py-4 font-bold">{Math.round(alert.score || 0)}</td>
                     <td className="px-6 py-4">
-                      <TierBadge tier={alert.tier} />
+                      <TierBadge tier={alert.tier || "low"} />
                     </td>
                     <td className="px-6 py-4 text-xs font-semibold text-slate-500 capitalize">
                       {alert.signals && alert.signals[0] ? (alert.signals[0].name || alert.signals[0].type || "None").replace(/_/g, " ") : "None"}

@@ -84,14 +84,14 @@ export default function CustomerDetailPage() {
       {/* Header card */}
       <div className="premium-card grid md:grid-cols-2 gap-8 items-start">
         <div className="space-y-4">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{alertData.customer_name}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{alertData.customer_name || "Customer Profile"}</h1>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold text-slate-500">{alertData.plan} Plan</span>
-            <TierBadge tier={alertData.tier} />
+            <span className="text-sm font-semibold text-slate-500">{alertData.plan || "Standard"} Plan</span>
+            <TierBadge tier={alertData.tier || "low"} />
           </div>
           <div className="pt-2">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Contract Value</span>
-            <span className="text-2xl font-black text-slate-900 tracking-tight">KES {alertData.mrr_kes.toLocaleString()} / mo</span>
+            <span className="text-2xl font-black text-slate-900 tracking-tight">KES {(alertData.mrr_kes || 0).toLocaleString()} / mo</span>
           </div>
         </div>
 
