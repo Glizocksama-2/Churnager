@@ -10,9 +10,6 @@ export default function LandingPage() {
   const [testResult, setTestResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const [stkLoading, setStkLoading] = useState(false);
-  const [stkResult, setStkResult] = useState<any>(null);
-
   let rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
   if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
     rawUrl = `https://${rawUrl}`;
@@ -58,29 +55,6 @@ export default function LandingPage() {
     triggerTestAlertFor(customerId);
   };
 
-  const triggerStkPush = async () => {
-    setStkLoading(true);
-    setStkResult(null);
-    try {
-      const res = await fetch(`${API_URL}/mpesa/stkpush`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: phone || "254708374149",
-          amount: 1,
-          reference: "ChurnagerSub",
-        }),
-      });
-      const data = await res.json();
-      setStkResult(data);
-    } catch (err) {
-      console.error(err);
-      alert("M-Pesa STK Push Connection Error");
-    } finally {
-      setStkLoading(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 space-y-16">
       {/* Hero section with asymmetric split */}
@@ -121,11 +95,11 @@ export default function LandingPage() {
             <div className="space-y-4 text-left">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Your M-Pesa Phone Number (Safcom Daraja STK Sandbox)
+                  Your WhatsApp Phone Number (Optional)
                 </label>
                 <input
                   type="tel"
-                  placeholder="e.g. +254708374149 or 0708..."
+                  placeholder="e.g. +254712345678 or 2547..."
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition font-mono"
@@ -134,7 +108,7 @@ export default function LandingPage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
-                  Target Demo Customer Cohort
+                  Target Customer Cohort
                 </label>
                 <select
                   value={selectedCustomerId}
@@ -149,40 +123,14 @@ export default function LandingPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => triggerTestAlertFor(selectedCustomerId)}
-                  disabled={loading}
-                  className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm disabled:opacity-50"
-                >
-                  {loading ? "Evaluating..." : "Evaluate Churn Risk"}
-                </button>
-
-                <button
-                  onClick={triggerStkPush}
-                  disabled={stkLoading}
-                  className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition shadow-sm disabled:opacity-50"
-                >
-                  {stkLoading ? "Connecting Daraja..." : "Send Daraja STK Push"}
-                </button>
-              </div>
+              <button
+                onClick={() => triggerTestAlertFor(selectedCustomerId)}
+                disabled={loading}
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm rounded-xl transition shadow-sm disabled:opacity-50"
+              >
+                {loading ? "Evaluating Risk Signals..." : "Trigger Live Risk Evaluation"}
+              </button>
             </div>
-
-            {/* STK Push result output */}
-            {stkResult && (
-              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-left space-y-1 animate-fadeIn">
-                <div className="flex justify-between items-center text-xs font-bold text-emerald-800">
-                  <span>Safaricom Daraja STK Push Response</span>
-                  <span className="font-mono">{stkResult.ResponseCode === "0" ? "STATUS 200 OK" : "FAILED"}</span>
-                </div>
-                <p className="text-xs text-emerald-900 font-mono">
-                  {stkResult.CustomerMessage || stkResult.ResponseDescription || "STK Request Accepted"}
-                </p>
-                {stkResult.CheckoutRequestID && (
-                  <span className="text-[10px] font-mono text-emerald-600 block">CheckoutID: {stkResult.CheckoutRequestID}</span>
-                )}
-              </div>
-            )}
 
             {/* Test result output */}
             {testResult && (
