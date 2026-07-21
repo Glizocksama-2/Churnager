@@ -15,7 +15,7 @@ from scheduler import start_scheduler
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Angaza Churn Alert", version="0.1.0")
+app = FastAPI(title="Churnager", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
