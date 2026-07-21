@@ -11,7 +11,7 @@ class RulesEngine:
 
     def load_config(self):
         try:
-            with open(CONFIG_PATH, "r") as f:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 self.rules = config.get("rules", {})
                 self.tiers = config.get("tiers", {})
@@ -122,3 +122,4 @@ class RulesEngine:
         if score >= self.tiers.get("medium", 30):
             return "medium"
         return "low"
+

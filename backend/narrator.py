@@ -1,6 +1,5 @@
 import os
 import json
-import httpx
 from ollama import Client
 
 PROMPT_TEMPLATE_PATH = os.path.join(os.path.dirname(__file__), "config", "narration_prompt.yaml")
@@ -13,7 +12,7 @@ class Narrator:
     def load_template(self):
         try:
             import yaml
-            with open(PROMPT_TEMPLATE_PATH, "r") as f:
+            with open(PROMPT_TEMPLATE_PATH, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 self.template = config.get("prompt_template", "")
         except Exception as e:
@@ -64,3 +63,4 @@ class Narrator:
             print(f"Ollama generation failed or timed out: {e}. Falling back to template-based narration.")
             
         return self.template_narration(customer_name, score, tier, signals)
+
