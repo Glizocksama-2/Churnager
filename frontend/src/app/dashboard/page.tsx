@@ -7,9 +7,11 @@ export default function DashboardPage() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+
   const fetchAlerts = async () => {
     try {
-      const res = await fetch("http://localhost:8000/alerts");
+      const res = await fetch(`${API_URL}/alerts`);
       const data = await res.json();
       setAlerts(data);
     } catch (err) {

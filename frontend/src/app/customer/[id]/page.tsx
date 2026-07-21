@@ -14,9 +14,11 @@ export default function CustomerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [handling, setHandling] = useState(false);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+
   const fetchRiskProfile = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/risk/${params.id}`);
+      const res = await fetch(`${API_URL}/risk/${params.id}`);
       const data = await res.json();
       setAlertData(data);
     } catch (err) {
@@ -30,7 +32,7 @@ export default function CustomerDetailPage() {
     if (!alertData) return;
     setHandling(true);
     try {
-      await fetch(`http://localhost:8000/alerts/${alertData.id}/handled`, {
+      await fetch(`${API_URL}/alerts/${alertData.id}/handled`, {
         method: "POST",
       });
       router.push("/dashboard");

@@ -7,11 +7,13 @@ export default function LandingPage() {
   const [testResult, setTestResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
+
   const triggerTestAlert = async () => {
     setLoading(true);
     try {
       // Send alert for Customer 1 (which is seeded by default)
-      const res = await fetch("http://localhost:8000/ingest", {
+      const res = await fetch(`${API_URL}/ingest`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -28,7 +30,7 @@ export default function LandingPage() {
       setTestResult(data);
     } catch (err) {
       console.error(err);
-      alert("Failed to connect to backend at http://localhost:8000");
+      alert(`Failed to connect to backend at ${API_URL}`);
     } finally {
       setLoading(false);
     }
