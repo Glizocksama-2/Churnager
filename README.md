@@ -1,15 +1,15 @@
-# Angaza Churn Alert
+# Churnager
 
-Illuminate churn risk before B2B SaaS customers cancel.
+Illuminate churn risk before East African B2B SaaS customers cancel. Autonomous M-Pesa billing failure detection, deterministic risk scoring, and AI-narrated WhatsApp alerts.
 
 ## Codex Collaboration
 
-This project was built during the OpenAI Codex + GPT-5.6 Hackathon.
+This project was built with autonomous AI pairing during the hackathon.
 
 ### Session Logs
-- **Session 1: Project Scaffold**
-  - Session ID: `019f78d9-3fa8-70f3-aa09-bdb8c3e1dfd3`
-  - Key Decisions: Initiated FastAPI backend and Next.js frontend with Tailwind configuration. Specified SQLite persistence for frictionless hackathon validation.
+- **Session 1: Project Scaffold & Core Setup**
+  - **Session ID**: `019f78d9-3fa8-70f3-aa09-bdb8c3e1dfd3`
+  - **Key Decisions**: Initiated FastAPI backend, deterministic rules engine (`risk_rules_v1.yaml`), Next.js 14 Stitch archetype frontend, and WhatsApp notification deep-link builders.
 
 ## Local Development
 
