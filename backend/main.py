@@ -206,10 +206,29 @@ def mark_handled(alert_id: int, db: Session = Depends(get_db)) -> AlertOut:
     return alert_to_dict(alert)
 
 
+@app.post("/seed")
+def seed_endpoint() -> dict[str, str]:
+    from seed import seed_data
+    seed_data()
+    return {"status": "seeded"}
+
+
 @app.on_event("startup")
 def startup() -> None:
     # Load rules and narrator configs
     rules_engine.load_config()
     narrator.load_template()
+    # Auto-seed database if empty
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        if db.query(Customer).count() == 0:
+            print("Auto-seeding demo database on startup...")
+            from seed import seed_data
+            seed_data()
+    except Exception as e:
+        print(f"Auto-seed warning: {e}")
+    finally:
+        db.close()
     # Start background scheduler
     start_scheduler()

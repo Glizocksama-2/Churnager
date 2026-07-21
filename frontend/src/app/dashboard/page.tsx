@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { TierBadge } from "../../components/TierBadge";
 
 export default function DashboardPage() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
 
   let rawUrl = process.env.NEXT_PUBLIC_API_URL || "https://churnager-production.up.railway.app";
   if (!rawUrl.startsWith("http://") && !rawUrl.startsWith("https://")) {
@@ -17,11 +19,24 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API_URL}/alerts`);
       const data = await res.json();
-      setAlerts(data);
+      setAlerts(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching alerts", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const seedDemoCohorts = async () => {
+    setSeeding(true);
+    try {
+      await fetch(`${API_URL}/seed`, { method: "POST" });
+      await fetchAlerts();
+    } catch (err) {
+      console.error("Error seeding cohorts", err);
+      alert("Failed to seed demo cohorts.");
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -38,12 +53,21 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Churn Intelligence Dashboard</h1>
           <p className="text-sm text-slate-500 mt-1">Real-time risk scoring and alert dispatch for M-Pesa billing cohorts.</p>
         </div>
-        <button
-          onClick={fetchAlerts}
-          className="px-4 py-2 text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 rounded-full transition"
-        >
-          Refresh Feed
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={seedDemoCohorts}
+            disabled={seeding}
+            className="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-full transition disabled:opacity-50"
+          >
+            {seeding ? "Seeding..." : "Populate Demo Cohorts"}
+          </button>
+          <button
+            onClick={fetchAlerts}
+            className="px-4 py-2 text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 rounded-full transition"
+          >
+            Refresh Feed
+          </button>
+        </div>
       </div>
 
       <div className="bg-white border border-slate-200/80 rounded-[2.5rem] shadow-sm overflow-hidden">
@@ -55,8 +79,15 @@ export default function DashboardPage() {
             <div className="h-10 bg-slate-100 rounded-md w-full"></div>
           </div>
         ) : alerts.length === 0 ? (
-          <div className="text-center py-24 text-slate-500 text-sm">
-            No active risk alerts found. Click Send Test Alert on the home page.
+          <div className="text-center py-20 space-y-4">
+            <p className="text-sm text-slate-500">No active risk alerts found in the database.</p>
+            <button
+              onClick={seedDemoCohorts}
+              disabled={seeding}
+              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full transition"
+            >
+              {seeding ? "Populating..." : "Populate 10 Demo Customer Cohorts"}
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -88,12 +119,12 @@ export default function DashboardPage() {
                       {alert.signals && alert.signals[0] ? (alert.signals[0].name || alert.signals[0].type || "None").replace(/_/g, " ") : "None"}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <a
+                      <Link
                         href={`/customer/${alert.customer_id}`}
-                        className="text-xs font-bold text-accent hover:text-accent-dark transition"
+                        className="text-xs font-bold text-emerald-600 hover:text-emerald-700 transition"
                       >
-                        Inspect Risk
-                      </a>
+                        Inspect Risk &rarr;
+                      </Link>
                     </td>
                   </tr>
                 ))}
